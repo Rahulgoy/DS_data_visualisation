@@ -3,8 +3,9 @@ import plotly.express as px
 import streamlit as st
 import seaborn as sns
 import matplotlib.pyplot as plt
+import plotly.graph_objects as go
 
-
+# --------------Page Configurations---------------------
 st.set_page_config(page_title="Google Play Store Stats",
                     page_icon=":bar_chart:",
                     layout="wide")
@@ -13,89 +14,71 @@ st.markdown(""" <style>
 footer {visibility: hidden;}
 </style> """, unsafe_allow_html=True)
 
+
+#-----------------Drop Null Values--------------------------
 data = pd.read_csv("googleplaystore.csv")
 data = data.dropna()
 
-# Header
+# ----------------Header--------------------------------
 st.header("Google Play Store Data Visualization")
 
 
-# 1. Metrices
+# ----------------1. Metrices---------------------------
 categories = data['Category'].unique()
 col01, col1, col2, col02= st.columns(4)
 col1.metric("Total Apps", len(data))
 col2.metric("Total Categories",len(categories))
-# col3.metric("Humidity", "86%", "4%")
 
 
-# 2. Show Dataset
+# ----------------2. Show Dataset-----------------------
 agree = st.checkbox('See the dataset!')
 if agree:
     st.dataframe(data)
 
 
-#
-fig1, ax1 = plt.subplots()
-ax1.pie(data['Category'].value_counts(), labels=categories, autopct='%1.1f%%',
-        shadow=True, startangle=90)
-ax1.axis('equal')  # Equal aspect ratio ensures that pie is drawn as a circle.
-
-# st.pyplot(fig1)
-
-# 3. Category wise data distri
+#---------------- 3. Category wise data distribution---------------
 st.subheader("Category wise data distribution")
 st.bar_chart(data['Category'].value_counts(), height=400)
-# bar_fig = px.bar(data['Category'].value_counts())
-# st.write(bar_fig)
 
 
+#------------------Center Content--------------------------------
 center_col1,center_col2 = st.columns(2)
 with center_col1:
-    # 4. Content Rating
+    #----------------4. Rating wise App Count-----------------
+    
+    st.subheader("Rating wise App Count")
+    group = data.groupby(['Rating']).count()
+    st.line_chart(group['App'],use_container_width=False,width=500,height=350)
+
+with center_col2:
+    # ---------------5. Content Rating-------------------------
+       
+    colors = ['#4c78a8','royalblue','cyan','lightcyan']
     content_categories = data['Content Rating'].unique()
     dataf = data['Content Rating'].value_counts()
     # st.write(data['Content Rating'].value_counts())
     st.subheader("Content Ratings")
-    fig = px.pie(dataf, values="Content Rating", names=content_categories)
-    fig.update_layout(margin=dict(l=1,r=1,b=1,t=1),paper_bgcolor="white", height=350, width=500, font_color="black")
+    fig = px.pie(dataf, values="Content Rating", names=content_categories,color_discrete_sequence=pd.Series(colors))
+    fig.update_layout(margin=dict(l=1,r=1,b=1,t=1),paper_bgcolor="#262730", height=350, width=500, font_color="white")
+    fig.update_traces(textposition='inside', textinfo='percent+label')
     st.write(fig)
-with center_col2:
-    st.subheader("Rating wise App Count")
-    group = data.groupby(['Rating']).count()
-    # st.dataframe(group)
-    st.line_chart(group['App'],use_container_width=False,width=500,height=350)
 
 
-# 4.   Categorie wise rating
+
+
+
+
+#-------------- 6.Categorie wise rating----------------
 result = data.groupby(['Category']).mean()
-
 st.subheader("Category wise average rating")
 st.bar_chart(result['Rating'],height=350,use_container_width=True)
-# To implement correlation 
-# fig, ax = plt.subplots()
-# sns.heatmap(data.corr(), ax=ax)
-# st.write(fig)
 
 
-st.sidebar.header("Please Filter Here:")
-
-# app = st.sidebar.multiselect(
-#     "Select the apps",
-#     options=data["App"].unique
-# )
-st.sidebar.write("Made with ❤ by Rahul Goyal")
 
 
-# Top 10 by categories with highest ratings
+#-------7. Top 10 by categories with highest ratings-----------
 
 cat = st.selectbox("Select the categorie",options=categories)
-# st.write(datafra)
-# cat_fig = px.bar(datafra,x="Rating",y="App",orientation='h')
-# cat_fig.update_layout(margin=dict(l=1,r=2,b=1,t=2),height=500, width=700)
-
-# st.write(cat_fig)
-
-
 cat_col1,cat_col2 = st.columns(2)
 
 with cat_col1:
@@ -114,3 +97,55 @@ with cat_col2:
     st.table(datafra)
 
 
+
+#------------8.Price Based Distribution-------------
+
+
+resp = data.groupby(['Category','Type']).count()
+free = resp.query("Type=='Free'")
+paid = resp.query("Type=='Paid'")
+
+
+# st.bar_chart(resp['App'], height=400)
+
+sub1,sub2,sub3 = st.columns(3)
+with sub2:
+    st.header("Price Based Distibution")
+
+price_col1,price_col2,price_col3 = st.columns(3)
+with price_col2:
+    customscale=[
+                [1.0, "rgb(76,120,168)"]]
+    fig = go.Figure(data=[
+        go.Bar(name='Paid', x=categories, y=paid['App'],marker=dict(color="#4c78a8",
+                        colorscale=customscale)),
+        go.Bar(name='Free', x=categories, y=free['App'],marker=dict(color="#92c2f7",
+                        colorscale=customscale)),
+        
+    ])
+    # Change the bar mode
+    fig.update_traces(texttemplate='%{text:.2s}', textposition='outside')
+    fig.update_layout(barmode='stack',margin=dict(l=1,r=1,b=1,t=1), uniformtext_minsize=8, uniformtext_mode='hide',width=1000,height=300)
+
+    st.write(fig)
+
+with price_col1:
+    free_c = resp.query("Type=='Free'")
+    free_count = free_c['App'].sum()
+    paid_c = resp.query("Type=='Paid'")
+    paid_count = paid_c['App'].sum()
+    counts = [free_count, paid_count]
+    colors = ['#92c2f7','#4c78a8']
+    
+    fig = px.pie(values=counts, names=["Free","Paid"],color_discrete_sequence=pd.Series(colors))
+    fig.update_layout(margin=dict(l=1,r=1,b=1,t=1),paper_bgcolor="#262730", height=270, width=380, font_color="white")
+    fig.update_traces(textposition='inside', textinfo='percent+label')
+    st.write(fig)
+
+
+
+st.sidebar.write("Made with ❤ by Rahul Goyal")
+# To implement correlation 
+# fig, ax = plt.subplots()
+# sns.heatmap(data.corr(), ax=ax)
+# st.write(fig)
