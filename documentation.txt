@@ -1,0 +1,28 @@
+---------------Google Play Store Data Visualization---------------------
+
+
+Name - Rahul Goyal
+Roll No - 101917152
+Sub-Batch - CSE6
+
+
+
+The dashboard is hosted at-
+https://dsvisualization.herokuapp.com/
+
+To run at local storage follow the steps:
+1. Create a python virtual environment
+    ->python3 -m pip install --user virtualenv
+
+2. Install required dependencies
+    -> pip3 install -r requirements.txt
+
+3. Run app.py in terminal
+    -> streamlit run app.py
+
+Hence the project will run on the localhost
+
+
+
+Explanation regarding the data is already mentioned in app.py
+

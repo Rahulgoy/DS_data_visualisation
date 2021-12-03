@@ -24,6 +24,8 @@ st.header("Google Play Store Data Visualization")
 
 
 # ----------------1. Metrices---------------------------
+##To show overall number of apps and categories
+
 categories = data['Category'].unique()
 col01, col1, col2, col02= st.columns(4)
 col1.metric("Total Apps", len(data))
@@ -38,7 +40,9 @@ if agree:
 
 #---------------- 3. Category wise data distribution---------------
 st.subheader("Category wise data distribution")
-st.bar_chart(data['Category'].value_counts(), height=400)
+
+# Counting the individual values of each category and creating a bar chart
+st.bar_chart(data['Category'].value_counts(), height=400)           
 
 
 #------------------Center Content--------------------------------
@@ -47,17 +51,21 @@ with center_col1:
     #----------------4. Rating wise App Count-----------------
     
     st.subheader("Rating wise App Count")
+
+    # Grouping the dataset by rating and counting the apps for each unique rating value
     group = data.groupby(['Rating']).count()
     st.line_chart(group['App'],use_container_width=False,width=500,height=350)
 
 with center_col2:
     # ---------------5. Content Rating-------------------------
        
-    colors = ['#4c78a8','royalblue','cyan','lightcyan']
+    ## Counting apps based on unique Content Rating
     content_categories = data['Content Rating'].unique()
     dataf = data['Content Rating'].value_counts()
-    # st.write(data['Content Rating'].value_counts())
+
+    ##Display a pie chart for the above data
     st.subheader("Content Ratings")
+    colors = ['#4c78a8','royalblue','cyan','lightcyan']
     fig = px.pie(dataf, values="Content Rating", names=content_categories,color_discrete_sequence=pd.Series(colors))
     fig.update_layout(margin=dict(l=1,r=1,b=1,t=1),paper_bgcolor="#262730", height=350, width=500, font_color="white")
     fig.update_traces(textposition='inside', textinfo='percent+label')
@@ -69,8 +77,11 @@ with center_col2:
 
 
 #-------------- 6.Categorie wise rating----------------
+
+## Getting the mean of each feature by grouping it on the bases of category
 result = data.groupby(['Category']).mean()
 st.subheader("Category wise average rating")
+## Bar chart for the average rating
 st.bar_chart(result['Rating'],height=350,use_container_width=True)
 
 
@@ -83,6 +94,7 @@ cat_col1,cat_col2 = st.columns(2)
 
 with cat_col1:
     st.subheader("Top 10 highest rated Apps by Categorie")
+    # Query the category input by the user, sort and then display the first 10 apps
     datafra = data.query("Category == @cat")
     datafra = datafra.sort_values(by=['Rating'], ascending=False)
     datafra = datafra.iloc[:10]
@@ -90,6 +102,7 @@ with cat_col1:
     st.table(datafra)
 with cat_col2:
     st.subheader("Top 10 Free Apps by Categorie")
+    # Query the free category input by the user, sort and then display the first 10 apps
     datafra = data.query("Category == @cat and Type == 'Free'")
     datafra = datafra.sort_values(by=['Rating'], ascending=False)
     datafra = datafra.iloc[:10]
@@ -101,12 +114,12 @@ with cat_col2:
 #------------8.Price Based Distribution-------------
 
 
+##Individually finding all the Free and Paid apps
 resp = data.groupby(['Category','Type']).count()
 free = resp.query("Type=='Free'")
 paid = resp.query("Type=='Paid'")
 
 
-# st.bar_chart(resp['App'], height=400)
 
 sub1,sub2,sub3 = st.columns(3)
 with sub2:
@@ -114,6 +127,7 @@ with sub2:
 
 price_col1,price_col2,price_col3 = st.columns(3)
 with price_col2:
+    ## Create a stacked Bar graph for each category to show Free and Paid apps
     customscale=[
                 [1.0, "rgb(76,120,168)"]]
     fig = go.Figure(data=[
@@ -130,6 +144,7 @@ with price_col2:
     st.write(fig)
 
 with price_col1:
+    ## Calculating overall count of Free and Paid Apps and displaying in a bar chart
     free_c = resp.query("Type=='Free'")
     free_count = free_c['App'].sum()
     paid_c = resp.query("Type=='Paid'")
@@ -145,7 +160,4 @@ with price_col1:
 
 
 st.sidebar.write("Made with ❤ by Rahul Goyal")
-# To implement correlation 
-# fig, ax = plt.subplots()
-# sns.heatmap(data.corr(), ax=ax)
-# st.write(fig)
+
